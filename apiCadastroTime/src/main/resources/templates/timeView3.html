@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+
+    <link href="css/open-iconic-bootstrap.min.css" rel="stylesheet">
+    
+    <title>Times - Exemplo GET - VUE.JS | AXIOS</title>
+
+	<script>
+        var vApp;
+        function createTimes() {
+            vApp = new Vue({
+                el: '#app',
+                data() {
+                    return {
+                        times: null
+                    }
+                },
+                methods: {
+                    obter: function () {
+                        axios.get('http://localhost:8001/times').then(response => (this.times = response.data))
+                    },
+                    novo: function (data) {
+                        axios.post('http://localhost:8001/times', data).then(response => (this.obter())).catch(error => {
+                            novoTimeError(error);
+                        });
+                    },
+                    eliminar: function (id) {
+                        axios.delete('http://localhost:8001/times/' + id).then(response => (this.obter()))
+                    },
+                    alterar: function (id, data) {
+                        axios.put('http://localhost:8001/times/' + id, data).then(response => (this.obter())).catch(error => {
+                        	updateTimeError(error);
+                        });
+                	},
+                }
+            })
+
+        }
+
+        function novoTime() {
+
+            $("#novoTime").modal('show');
+        }
+
+        function saveTime() {
+            var time = {}        
+            time.teamId = parseInt($("#txtTeamId").val());
+            time.name = $("#txtName").val();
+            time.color = $("#txtColor").val();
+            time.fundation_year = parseInt($("#txtFundation_year").val());
+            time.stadium = $("#txtStadium").val();
+            time.coach = $("#txtCoach").val();
+            time.twisted_organized = $("#txtTwisted_organized").val();
+            vApp.novo(time);
+            $("#novoTime").modal('hide');
+            
+        }
+        
+        function novoTimeError(err) {
+            console.log(err.response.status);
+            if (err.response.status == 409) {
+                $("#msgAlerta").text("Time já cadastrado.");
+
+            } else {
+                $("#msgAlerta").text("Erro chamada função:" + err.response.status);
+            }
+            $("#divAlerta").addClass("show");
+        }
+        
+        function deleteTime(obj) {
+        	var i = parseInt(obj.dataset.deleteId);
+        	console.log(vApp.times[i]);
+        	// prepara modal de confirmação
+        	$("#txtTeamId_delete").val(vApp.times[i].teamId);
+        	$("#txtName_delete").val(vApp.times[i].name);
+        	$("#txtColor_delete").val(vApp.times[i].color);
+        	$("#txtFundation_year_delete").val(vApp.times[i].fundation_year);
+        	$("#txtStadium_delete").val(vApp.times[i].stadium);
+        	$("#txtCoach_delete").val(vApp.times[i].coach);
+        	$("#txtTwisted_organized_delete").val(vApp.times[i].twisted_organized);
+        	
+        	$("#deleteTimeModal").modal('show');
+        	
+        }
+        
+        function deleteTimeConfirm() {
+        	
+        	vApp.eliminar($("#txtTeamId_delete").val());
+
+            $("#deleteTimeModal").modal('hide');
+        }
+        
+        function updateTime(obj) {
+            var i = parseInt(obj.dataset.updateId);
+            console.log(vApp.times[i]);
+            // prepara modal de alteração
+            $("#txtTeamId_update").val(vApp.times[i].teamId);
+        	$("#txtName_update").val(vApp.times[i].name);
+        	$("#txtColor_update").val(vApp.times[i].color);
+        	$("#txtFundation_year_update").val(vApp.times[i].fundation_year);
+        	$("#txtStadium_update").val(vApp.times[i].stadium);
+        	$("#txtCoach_update").val(vApp.times[i].coach);
+        	$("#txtTwisted_organized_update").val(vApp.times[i].twisted_organized);
+
+            $("#updateTimeModal").modal('show');
+
+        }
+        
+        function updateTimeConfirm() {
+
+            var time = {};
+            time.teamId = parseInt($("#txtTeamId_update").val());
+            time.name = $("#txtName_update").val()
+            time.color = $("#txtColor_update").val();
+            time.fundation_year = $("#txtFundation_year_update").val();
+            time.stadium = $("#txtStadium_update").val();
+            time.coach = $("#txtCoach_update").val();
+            time.twisted_organized = $("#txtTwisted_organized_update").val();
+			console.log($("#txtTeamId_update").val());
+            vApp.alterar($("#txtTeamId_update").val(), time);
+
+            $("#updateTimeModal").modal('hide');
+        }
+        
+        function updateTimeError(err) {
+            console.log(err.response.status);
+            if (err.response.status == 204) {
+                $("#msgAlerta").text("Time não existe cadastrado.");
+
+            } else {
+                $("#msgAlerta").text("Erro chamada função:" + err.response.status);
+            }
+            $("#divAlerta").addClass("show");
+        }
+    </script>
+
+</head>
+<body>
+    <div class="container" id="app">
+
+        <h1>Times - VUE | AXIOS</h1>
+        <div id="divAlerta" class="alert alert-warning alert-dismissible fade" role="alert">
+            <span id="msgAlerta"></span>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <table class="table">
+        
+            <thead>
+                <tr>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                    <th scope="col">#</th>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Cor</th>
+                    <th scope="col">Ano de fundacao</th>
+                    <th scope="col">Estadio</th>
+                    <th scope="col">Treinador</th>
+                    <th scope="col">Torcida Organizada</th>
+                </tr>
+            </thead>
+            
+            <tbody >
+                <tr v-for="(time, index) in times">
+                    <td><span onclick="updateTime(this);" class="oi oi-pencil" v-bind:data-update-id="index" aria-hidden="true"></span></td>
+                    <td><span onclick="deleteTime(this);" class="oi oi-trash" v-bind:data-delete-id="index" aria-hidden="true"></span></td>
+                    
+                    <td>{{ time.teamId }}</td>
+                    <td>{{ time.name }}</td>
+                    <td>{{ time.color }}</td>
+                    <td>{{ time.fundation_year }}</td>
+                    <td>{{ time.stadium }}</td>
+                    <td>{{ time.coach }}</td>
+                    <td>{{ time.twisted_organized }}</td>
+                </tr>
+    
+            </tbody>
+        </table>
+
+        <button class="btn btn-primary" onclick="vApp.obter();">Obter Times</button>
+
+        <button class="btn btn-primary" onclick="novoTime()">Novo Time</button>
+
+        <!-- modal novo time -->
+        <div id="novoTime" class="modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Novo Time</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="txtTeamId">ID: </label>
+                            <input type="number" class="form-control" id="txtTeamId" placeholder="ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="txtName">Nome: </label>
+                            <input type="text" class="form-control" id="txtName" placeholder="Nome">
+                        </div>
+                        <div class="form-group">
+                            <label for="txtColor">Cor: </label>
+                            <input type="text" class="form-control" id="txtColor" placeholder="Cor">
+                        </div>
+                        <div class="form-group">
+                            <label for="txtFundation_year">Ano de fundacao: </label>
+                            <input type="number" class="form-control" id="txtFundation_year" placeholder="Ano de Fundacao">
+                        </div>
+                        <div class="form-group">
+                            <label for="txtStadium">Estadio: </label>
+                            <input type="text" class="form-control" id="txtStadium" placeholder="Estadio">
+                        </div>
+                        <div class="form-group">
+                            <label for="txtCoach">Treinador: </label>
+                            <input type="text" class="form-control" id="txtCoach" placeholder="Treinador">
+                        </div>
+                        <div class="form-group">
+                            <label for="txtTwisted_organized">Torcida Organizada: </label>
+                            <input type="text" class="form-control" id="txtTwisted_organized" placeholder="Torcida Organizada">
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-primary" onclick="saveTime();">Salvar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- modal alterar time -->
+        <div id="updateTimeModal" class="modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Alterar Time</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="txtTeamId_update">ID</label>
+                            <input type="text" class="form-control" id="txtTeamId_update" readOnly="readOnly" />
+
+                        </div>
+                        <div class="form-group">
+                            <label for="txtName_update">Nome</label>
+                            <input type="text" class="form-control" id="txtName_update" placeholder="Nome">
+                        </div>
+                        <div class="form-group">
+                            <label for="txtColor_update">Cor</label>
+                            <input type="text" class="form-control" id="txtColor_update" />
+                        </div>
+                        <div class="form-group">
+                            <label for="txtFundation_year_update">Ano de Fundacao</label>
+                            <input type="number" class="form-control" id="txtFundation_year_update" />
+                        </div>
+                        <div class="form-group">
+                            <label for="txtStadium_update">Estadio</label>
+                            <input type="text" class="form-control" id="txtStadium_update" />
+                        </div>
+                        <div class="form-group">
+                            <label for="txtCoach_update">Treinador</label>
+                            <input type="text" class="form-control" id="txtCoach_update" />
+                        </div>
+                        <div class="form-group">
+                            <label for="txtTwisted_organized_update">Torcida Organizada</label>
+                            <input type="text" class="form-control" id="txtTwisted_organized_update" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-primary" onclick="updateTimeConfirm();">Alterar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+    <div id="deleteTimeModal" class="modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Eliminar Times</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="txtTeamId_delete">ID</label>
+                            <input type="number" class="form-control" id="txtTeamId_delete" readonly="readOnly" />
+                        </div>
+                        <div class="form-group">
+                            <label for="txtName_delete">Nome</label>
+                            <input type="text" class="form-control" id="txtName_delete" placeholder="modelo" readonly="readOnly" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-primary" onclick="deleteTimeConfirm();">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>createTimes();</script>
+</body>
+</html>
